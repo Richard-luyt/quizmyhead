@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "GPT 阅读助手",
+  "version": "1.0",
+  "description": "提取网页正文内容，并基于 GPT 提出问题、评分、点评。",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"]
+  }]
+}
