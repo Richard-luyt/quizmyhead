@@ -1,15 +1,29 @@
 async function askGPT(prompt) {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
+  const url = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
+
+  const res = await fetch(url, {
+    method: "POST",
     headers: {
-      'Authorization': 'Bearer YOUR_API_KEY',
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }]
+      model: "deepseek-r1",  // 或 deepseek-r1
+      messages: [
+        { role: "user", content: prompt }
+      ]
     })
   });
+
   const data = await res.json();
-  return data.choices[0].message.content;
+
+  if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+    throw new Error("DeepSeek 返回结构异常：" + JSON.stringify(data));
+  }
+
+  const msg = data.choices[0].message;
+
+  return {
+    answer: msg.content || "（无 content）",
+    reasoning: msg.reasoning_content || "（无 reasoning_content）"
+  };
 }

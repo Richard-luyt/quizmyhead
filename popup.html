@@ -1,14 +1,61 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
+    <title>GPT 阅读助手</title>
     <link rel="stylesheet" href="style.css" />
+    <style>
+      label {
+        display: block;
+        margin-top: 12px;
+        margin-bottom: 6px;
+        font-weight: bold;
+      }
+
+      .question-block {
+        background-color: white;
+        border-radius: 10px;
+        padding: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        margin-bottom: 16px;
+      }
+
+    </style>
+
   </head>
+
   <body>
-    <h1>GPT 阅读助手</h1>
-    <button id="generate">生成问题</button>
-    <div id="questions"></div>
-    <div id="answers"></div>
-    <div id="feedback"></div>
-    <script src="popup.js"></script>
+    <div class="container">
+      <h1>GPT 阅读助手</h1>
+
+      <label for="language-select">🌐 Language:</label>
+      <select id="language-select">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
+
+      <label for="difficulty">难度：</label>
+      <select id="difficulty">
+        <option value="简单">简单</option>
+        <option value="中等">中等</option>
+        <option value="困难">困难</option>
+      </select>
+
+      <label for="numQuestions">题目数量：</label>
+      <select id="numQuestions">
+        <option value="1">1</option>
+        <option value="3" selected>3</option>
+        <option value="5">5</option>
+      </select>
+
+      <button id="generate">生成问题</button>
+
+      <div id="questions"></div>
+      <div id="answers"></div>
+      <div id="feedback"></div>
+
+      <script src="marked.min.js"></script>
+      <script src="popup.js"></script>
+    </div>
   </body>
 </html>
