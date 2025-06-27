@@ -1,0 +1,97 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  background: #fff6df;
+  min-height: 100vh; /* 让背景高度至少撑满页面 */
+  min-width: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+
+/* 动态渐变背景效果 */
+@keyframes gradientBG {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
+}
+
+/* 标题 */
+h1 {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  color: #AD2323;
+  margin-bottom: 20px;
+}
+
+/* 表单控件样式 */
+select, textarea, input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  outline: none;
+}
+
+/* 按钮样式 */
+button {
+  margin-top: 20px;
+  background: #AD2323;
+  color: rgb(255, 255, 255);
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 24px;
+  padding: 12px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background: linear-gradient(to right, #78db73, #56dec0);
+}
+
+.container {
+  background: transparent;
+  padding: 24px;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 620px; /* 可根据你喜好调大 */
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+#generate {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.question-block {
+  background-color: white;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  margin-bottom: 16px;
+}
+
+#root {
+  width: 100%;
+  min-width: 100%;
+  padding: 0;
+  margin: 0;
+}
