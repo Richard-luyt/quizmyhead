@@ -3,7 +3,7 @@ body {
   padding: 0;
   font-family: sans-serif;
   background: linear-gradient(to bottom right, #e7e7d5, #fff5e4);
-  min-height: 100vh; /* 让背景高度至少撑满页面 */
+  min-height: 100vh;
   min-width: 400px;
   display: flex;
   justify-content: center;
@@ -12,27 +12,24 @@ body {
   box-sizing: border-box;
 }
 
-
-/* 动态渐变背景效果 */
 @keyframes gradientBG {
   0% {background-position: 0% 50%;}
   50% {background-position: 100% 50%;}
   100% {background-position: 0% 50%;}
 }
 
-/* 标题 */
 h1.gradient-text {
   font-size: 24px;
   font-weight: bold;
   text-align: center;
   background: linear-gradient(to right, #ff1d7b, #f50101);
   margin-bottom: 20px;
-  -webkit-background-clip: text;  /* 仅对文字区域应用背景 */
-  -webkit-text-fill-color: transparent; /* 文字变透明，显示背景 */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   font-weight: bold;
 }
 
-/* 表单控件样式 */
+
 select, textarea, input {
   width: 100%;
   padding: 10px 14px;
@@ -44,7 +41,7 @@ select, textarea, input {
   outline: none;
 }
 
-/* 按钮样式 */
+
 button {
   position: relative;
   overflow: hidden;
@@ -97,9 +94,9 @@ button:active {
   min-height: auto;
   overflow-y: auto;
 
-  backdrop-filter: blur(12px); /* 毛玻璃模糊程度 */
-  -webkit-backdrop-filter: blur(12px); /* 兼容性 */
-  background-color: rgba(255, 255, 255, 0.3); /* 半透明背景 */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.3);
 
   padding: 32px;
   border-radius: 24px;
@@ -109,7 +106,7 @@ button:active {
   box-sizing: border-box;
 
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.5); /* 让边缘更清晰 */
+  border: 1px solid rgba(255, 255, 255, 0.5);
   animation: fadeInSlide 0.5s ease;
 }
 
@@ -177,13 +174,13 @@ select {
   color: #333;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
-  appearance: none; /* 移除默认样式 */
+  appearance: none;
 }
 
 select:focus {
   outline: none;
-  border-color: #3b82f6; /* 蓝色边框 */
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* 蓝色光圈 */
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .reset-button {

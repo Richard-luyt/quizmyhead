@@ -95,7 +95,7 @@ export default function App() {
 
 
   const handleGenerate = () => {
-    setIsGenerating(true); // 开始 loading
+    setIsGenerating(true);
 
     chrome.storage.local.set({
       savedQuestions: questions,
@@ -128,7 +128,7 @@ export default function App() {
         } catch (err) {
           alert("生成失败：" + err.message);
         } finally {
-          setIsGenerating(false); // 结束 loading
+          setIsGenerating(false);
         }
       });
     });
@@ -162,7 +162,6 @@ export default function App() {
     }
     setFeedbacks(newFeedbacks);
 
-    // 自动保存为 TXT 文件
     const content = results.map((r, i) => 
       `${lang === "zh" ? "问题" : "Question"} ${i+1}：${r.question}\n` +
       `${lang === "zh" ? "回答" : "Answer"}：${r.answer}\n` +
