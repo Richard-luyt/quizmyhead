@@ -14,7 +14,7 @@ const i18n = {
   zh: {
     title: "考考你啊",
     difficulty: "难度：",
-    count: "题目数量：",
+    numQuestions: "题目数量：",
     generate: "生成问题",
     submit: "提交回答",
     feedback: i => `第 ${i + 1} 题 GPT 反馈：`,
@@ -25,7 +25,7 @@ const i18n = {
   en: {
     title: "Quiz My Head",
     difficulty: "Difficulty:",
-    count: "Number of Questions:",
+    numQuestions: "Number of Questions:",
     generate: "Generate",
     submit: "Submit",
     feedback: i => `GPT Feedback for Question ${i + 1}:`,
@@ -48,11 +48,31 @@ export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   //const [isHovering, setIsHovering] = useState(false);
+  const [articleText, setArticleText] = useState("");
 
 
   useEffect(() => {
-    localStorage.setItem("lang", lang);
-  }, [lang]);
+    chrome.storage.local.get(
+      ["savedQuestions", "savedLang", "savedDifficulty", "savedCount"],
+      (result) => {
+        if (result.savedQuestions) {
+          setQuestions(result.savedQuestions);
+          setLang(result.savedLang || "en");
+          setDifficulty(result.savedDifficulty || "easy");
+          setNumQuestions(result.savedCount || 3);
+        }
+      }
+    );
+  }, []);
+
+  useEffect(() => {
+    chrome.storage.local.set({
+      savedQuestions: questions,
+      savedLang: lang,
+      savedDifficulty: difficulty,
+      savedCount: numQuestions
+    });
+  }, [questions, lang, difficulty, numQuestions]);
 
   const getDifficultyText = () => {
     if (lang === "zh") return difficulty;
@@ -73,8 +93,17 @@ export default function App() {
     return data.result;
   };
 
+
   const handleGenerate = () => {
     setIsGenerating(true); // 开始 loading
+
+    chrome.storage.local.set({
+      savedQuestions: questions,
+      savedLang: lang,
+      savedDifficulty: difficulty,
+      savedCount: numQuestions
+    });
+
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
       if (!tabs.length){
         setIsGenerating(false);
@@ -85,7 +114,7 @@ export default function App() {
           setIsGenerating(false);
           return alert(t.noText);
         }
-
+        setArticleText(res.text);
         const prompt = lang === "zh"
           ? `请根据以下文章内容，提出 ${numQuestions} 个${getDifficultyText()}难度的问题：\n${res.text}。\n请只输出题目列表，格式为1. 问题内容 2. 问题内容。不要写解释、说明或前言。`
           : `Based on the following article, generate ${numQuestions} ${getDifficultyText()} questions.\nPlease output only the list of questions starting with '1.', '2.' etc., and **do not include any introduction or explanation**.\n\n${res.text}`;
@@ -108,7 +137,7 @@ export default function App() {
   const handleSubmit = async () => {
     const results = [];
     const newFeedbacks = [];
-
+    //const articleText = res.text;
     for (let i = 0; i < answers.length; i++) {
       if (!answers[i]?.trim()) {
         alert(lang === "zh" ? `第 ${i + 1} 题未填写答案！` : `Question ${i + 1} is empty!`);
@@ -118,8 +147,8 @@ export default function App() {
     setIsSubmitting(true); 
     for (let i = 0; i < questions.length; i++) {
       const prompt = lang === "zh"
-        ? `问题：${questions[i]}\n回答：${answers[i]}\n请评分并解释理由，尽量严格打分`
-        : `Question: ${questions[i]}\nAnswer: ${answers[i]}\nPlease rate the answer and give explanation`;
+        ? `问题：${questions[i]}\n回答：${answers[i]}\n请评分并解释理由，尽量严格打分,原文是：${articleText}`
+        : `Question: ${questions[i]}\nAnswer: ${answers[i]}\nPlease rate the answer and give explanation, the original article is : ${articleText}`;
 
       try {
         const feedback = await askMyServer(prompt);
@@ -151,6 +180,12 @@ export default function App() {
     setAnswers(newAnswers);
   };
 
+  const handleReset = () => {
+    chrome.storage.local.clear(() => {
+      window.location.reload();
+    });
+  };
+
   const downloadContent = questions.map((q, i) => {
     return (
       `【${t.question} ${i + 1}】\n${q}\n` +
@@ -174,7 +209,7 @@ export default function App() {
         t={t}
       />
 
-      <button onClick={handleGenerate} disabled={isGenerating}>
+      <button onClick={handleGenerate} disabled={isGenerating} style={{ marginBottom: '20px' }}>
         {isGenerating ? (
           <>
             <svg className="spinner" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
@@ -191,30 +226,36 @@ export default function App() {
         )}
       </button>
 
-      <QuestionList
-        questions={questions}
-        answers={answers}
-        onAnswerChange={handleAnswerChange}
-      />
-
 
       {questions.length > 0 && (
-        <div id="answers">
-          <button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
-                <svg className="spinner" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" ><path d="M22 12a1 1 0 0 1-10 0 1 1 0 0 0-10 0"/>
-                  <path d="M7 20.7a1 1 0 1 1 5-8.7 1 1 0 1 0 5-8.6"/>
-                  <path d="M7 3.3a1 1 0 1 1 5 8.6 1 1 0 1 0 5 8.6"/>
-                  <circle cx="12" cy="12" r="10"/>
-                </svg>
-                <span>{lang === "zh" ? "提交中..." : "Submitting..."}</span>
-              </>
-            ) : (
-              <span>{t.submit}</span>
-            )}
-          </button>
-        </div>
+        <>
+          <QuestionList
+            questions={questions}
+            answers={answers}
+            onAnswerChange={handleAnswerChange}
+          />
+
+          <div id="answers">
+            <button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <svg className="spinner" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" ><path d="M22 12a1 1 0 0 1-10 0 1 1 0 0 0-10 0"/>
+                    <path d="M7 20.7a1 1 0 1 1 5-8.7 1 1 0 1 0 5-8.6"/>
+                    <path d="M7 3.3a1 1 0 1 1 5 8.6 1 1 0 1 0 5 8.6"/>
+                    <circle cx="12" cy="12" r="10"/>
+                  </svg>
+                  <span>{lang === "zh" ? "提交中..." : "Submitting..."}</span>
+                </>
+              ) : (
+                <span>{t.submit}</span>
+              )}
+            </button>
+
+            <button onClick={handleReset} className="reset" style={{marginTop: '10px',backgroundColor: '#ccc',color: 'white'}}>
+              <span>{lang === "zh" ? "重置" : "Reset"}</span>
+            </button>
+          </div>
+        </>
       )}
 
       <FeedbackList feedbacks={feedbacks} t={t} />

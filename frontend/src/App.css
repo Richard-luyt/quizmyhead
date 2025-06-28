@@ -94,6 +94,8 @@ button:active {
 }
 
 .container {
+  min-height: auto;
+  overflow-y: auto;
 
   backdrop-filter: blur(12px); /* 毛玻璃模糊程度 */
   -webkit-backdrop-filter: blur(12px); /* 兼容性 */
@@ -163,4 +165,40 @@ button:disabled {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+select {
+  font-size: 16px;
+  padding: 12px;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background-color: #fff;
+  color: #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  appearance: none; /* 移除默认样式 */
+}
+
+select:focus {
+  outline: none;
+  border-color: #3b82f6; /* 蓝色边框 */
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* 蓝色光圈 */
+}
+
+.reset-button {
+  margin-top: 10px;
+  width: 100%;
+  padding: 12px;
+  background: #ddd;
+  color: #333;
+  font-weight: bold;
+  border: none;
+  border-radius: 24px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.reset-button:hover {
+  background: #bbb;
+  transform: translateY(-1px);
 }

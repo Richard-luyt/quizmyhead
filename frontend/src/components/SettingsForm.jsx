@@ -10,7 +10,7 @@ export default function SettingsForm({ difficulty, numQuestions, onDifficultyCha
 
       </select>
 
-      <label htmlFor="numQuestions">{t.count}</label>
+      <label htmlFor="numQuestions">{t.numQuestions}</label>
       <select id="numQuestions" value={numQuestions} onChange={e => onNumChange(e.target.value)}>
         <option value="1">1</option>
         <option value="3">3</option>
