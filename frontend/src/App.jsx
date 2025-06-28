@@ -1,7 +1,13 @@
 // frontend/src/App.jsx
 import { useEffect, useState } from 'react';
-import './App.css'; // 你可以把 style.css 内容复制到这个文件
+import './App.css';
 import { marked } from 'marked';
+import LanguageSelector from './components/LanguageSelector.jsx';
+import SettingsForm from './components/SettingsForm.jsx';
+import QuestionList from './components/QuestionList.jsx';
+import FeedbackList from './components/FeedbackList.jsx';
+import DownloadButton from './components/DownloadButton.jsx';
+
 
 
 const i18n = {
@@ -37,8 +43,12 @@ export default function App() {
   const [answers, setAnswers] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
   const [canDownload, setCanDownload] = useState(false);
-  const [downloadContent, setDownloadContent] = useState('');
+  //const [downloadContent, setDownloadContent] = useState('');
   const t = i18n[lang];
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  //const [isHovering, setIsHovering] = useState(false);
+
 
   useEffect(() => {
     localStorage.setItem("lang", lang);
@@ -64,13 +74,22 @@ export default function App() {
   };
 
   const handleGenerate = () => {
+    setIsGenerating(true); // 开始 loading
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-      if (!tabs.length) return alert("无法获取当前活动标签页！");
+      if (!tabs.length){
+        setIsGenerating(false);
+        return alert("无法获取当前活动标签页！");
+      }
       chrome.tabs.sendMessage(tabs[0].id, { action: 'extractText' }, async res => {
-        if (!res?.text) return alert(t.noText);
+        if (!res?.text){
+          setIsGenerating(false);
+          return alert(t.noText);
+        }
+
         const prompt = lang === "zh"
           ? `请根据以下文章内容，提出 ${numQuestions} 个${getDifficultyText()}难度的问题：\n${res.text}。\n请只输出题目列表，格式为1. 问题内容 2. 问题内容。不要写解释、说明或前言。`
           : `Based on the following article, generate ${numQuestions} ${getDifficultyText()} questions.\nPlease output only the list of questions starting with '1.', '2.' etc., and **do not include any introduction or explanation**.\n\n${res.text}`;
+        
         try {
           const result = await askMyServer(prompt);
           const qList = result.split("\n").filter(line => /^\s*\d+\./.test(line)).map(line => line.trim());
@@ -79,6 +98,8 @@ export default function App() {
           setFeedbacks([]);
         } catch (err) {
           alert("生成失败：" + err.message);
+        } finally {
+          setIsGenerating(false); // 结束 loading
         }
       });
     });
@@ -88,6 +109,13 @@ export default function App() {
     const results = [];
     const newFeedbacks = [];
 
+    for (let i = 0; i < answers.length; i++) {
+      if (!answers[i]?.trim()) {
+        alert(lang === "zh" ? `第 ${i + 1} 题未填写答案！` : `Question ${i + 1} is empty!`);
+        return;
+      }
+    }
+    setIsSubmitting(true); 
     for (let i = 0; i < questions.length; i++) {
       const prompt = lang === "zh"
         ? `问题：${questions[i]}\n回答：${answers[i]}\n请评分并解释理由，尽量严格打分`
@@ -99,6 +127,7 @@ export default function App() {
         results.push({ question: questions[i], answer: answers[i], feedback });
       } catch (err) {
         alert(t.fetchError(i));
+        setIsSubmitting(false);
         return;
       }
     }
@@ -111,82 +140,91 @@ export default function App() {
       `${lang === "zh" ? "GPT 反馈" : "GPT Feedback"}：${r.feedback}\n`
     ).join("\n\n");
 
-    setDownloadContent(content);
+    //setDownloadContent(content);
     setCanDownload(true);
+    setIsSubmitting(false);
   };
+
+  const handleAnswerChange = (index, value) => {
+    const newAnswers = [...answers];
+    newAnswers[index] = value;
+    setAnswers(newAnswers);
+  };
+
+  const downloadContent = questions.map((q, i) => {
+    return (
+      `【${t.question} ${i + 1}】\n${q}\n` +
+      `【${t.answer} ${i + 1}】\n${answers[i]}\n` +
+      `【${t.feedback(i)}】\n${feedbacks[i]}\n`
+    );
+  }).join('\n\n');
+
 
   return (
     <div className="container">
-      <h1>{t.title}</h1>
+      <h1 className="gradient-text">{t.title}</h1>
 
-      <label htmlFor="language-select">🌐 Language:</label>
-      <select id="language-select" value={lang} onChange={e => setLang(e.target.value)}>
-        <option value="zh">中文</option>
-        <option value="en">English</option>
-      </select>
+      <LanguageSelector lang={lang} onChange={setLang} />
 
-      <label htmlFor="difficulty">{t.difficulty}</label>
-      <select id="difficulty" value={difficulty} onChange={e => setDifficulty(e.target.value)}>
-        <option value="简单">简单</option>
-        <option value="中等">中等</option>
-        <option value="困难">困难</option>
-      </select>
+      <SettingsForm
+        difficulty={difficulty}
+        numQuestions={numQuestions}
+        onDifficultyChange={setDifficulty}
+        onNumChange={setNumQuestions}
+        t={t}
+      />
 
-      <label htmlFor="numQuestions">{t.count}</label>
-      <select id="numQuestions" value={numQuestions} onChange={e => setNumQuestions(e.target.value)}>
-        <option value="1">1</option>
-        <option value="3">3</option>
-        <option value="5">5</option>
-      </select>
+      <button onClick={handleGenerate} disabled={isGenerating}>
+        {isGenerating ? (
+          <>
+            <svg className="spinner" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+              viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 12a1 1 0 0 1-10 0 1 1 0 0 0-10 0"/>
+              <path d="M7 20.7a1 1 0 1 1 5-8.7 1 1 0 1 0 5-8.6"/>
+              <path d="M7 3.3a1 1 0 1 1 5 8.6 1 1 0 1 0 5 8.6"/>
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+            <span>{lang === "zh" ? "生成中..." : "Generating..."}</span>
+          </>
+        ) : (
+          <span>{t.generate}</span>
+        )}
+      </button>
 
-      <button onClick={handleGenerate}>{t.generate}</button>
+      <QuestionList
+        questions={questions}
+        answers={answers}
+        onAnswerChange={handleAnswerChange}
+      />
 
-      <div id="questions">
-        {questions.map((q, i) => (
-          <div key={i} className="question-block">
-            <p><strong>{`问题 ${i + 1}：`}</strong>{q}</p>
-            <textarea rows={2} value={answers[i]} onChange={e => {
-              const newAnswers = [...answers];
-              newAnswers[i] = e.target.value;
-              setAnswers(newAnswers);
-            }} />
-          </div>
-        ))}
-      </div>
 
       {questions.length > 0 && (
         <div id="answers">
-          <button onClick={handleSubmit}>{t.submit}</button>
+          <button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <svg className="spinner" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" ><path d="M22 12a1 1 0 0 1-10 0 1 1 0 0 0-10 0"/>
+                  <path d="M7 20.7a1 1 0 1 1 5-8.7 1 1 0 1 0 5-8.6"/>
+                  <path d="M7 3.3a1 1 0 1 1 5 8.6 1 1 0 1 0 5 8.6"/>
+                  <circle cx="12" cy="12" r="10"/>
+                </svg>
+                <span>{lang === "zh" ? "提交中..." : "Submitting..."}</span>
+              </>
+            ) : (
+              <span>{t.submit}</span>
+            )}
+          </button>
         </div>
       )}
 
-      <div id="feedback">
-        {feedbacks.map((f, i) => (
-          <div key={i} className="feedback-block">
-            <h3>{t.feedback(i)}</h3>
-            <div dangerouslySetInnerHTML={{ __html: marked.parse(f) }} />
-          </div>
-        ))}
-      </div>
+      <FeedbackList feedbacks={feedbacks} t={t} />
 
-      {canDownload && (
-        <button
-          onClick={() => {
-            const blob = new Blob([downloadContent], { type: "text/plain;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "gpt_feedback.txt";
-            a.style.display = "none";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-          }}
-        >
-          {t.save}
-        </button>
-      )}
+      <DownloadButton
+        canDownload={canDownload}
+        downloadContent={downloadContent}
+        t={t}
+      />
+
     </div>
   );
 }
