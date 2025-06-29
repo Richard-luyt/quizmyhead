@@ -4,6 +4,8 @@ QuizMyHead is a Chrome extension powered by Gemini AI, designed to help users en
 
 > If you encounter an issue where the page content cannot be extracted, please refresh the page and try again after it has fully loaded.
 
+![](pic.png)
+
 ## Features
 
 - Extracts main content from webpages
